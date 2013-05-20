@@ -37,11 +37,11 @@ Packet ID   | Field Name    | Field Type | Example   | Notes
 ------------|---------------|------------|-----------|----------------------------
 0x01        | Entity ID     | int        | 957759560 | Server-generated random id 
             | Level type    | string     | default   | default, flat, or largeBiomes. level-type in server.properties
-			| Game mode     | byte       | 0         | 0: survival, 1: creative, 2: adventure. Bit 3 (0x8) is the hardcore flag
-			| Dimension     | byte       | 0         | -1: nether, 0: overworld, 1: end 
-			| Difficulty    | byte       | 1         | 0 thru 3 for Peaceful, Easy, Normal, Hard  
-			| Not used      | byte       | 0         | Only 0 observed from vanilla server, was previously world height 
-			| Max players   | byte       | 8         | Used by the client to draw the player list 
+            | Game mode     | byte       | 0         | 0: survival, 1: creative, 2: adventure. Bit 3 (0x8) is the hardcore flag
+            | Dimension     | byte       | 0         | -1: nether, 0: overworld, 1: end 
+            | Difficulty    | byte       | 1         | 0 thru 3 for Peaceful, Easy, Normal, Hard  
+            | Not used      | byte       | 0         | Only 0 observed from vanilla server, was previously world height 
+            | Max players   | byte       | 8         | Used by the client to draw the player list 
 Total Size: | 12 bytes + length of strings
 
 Handshake (0x02)
@@ -54,8 +54,8 @@ Packet ID   | Field Name       | Field Type | Example   | Notes
 ------------|------------------|------------|-----------|----------------------------
 0x02        | Protocol Version | byte       | 51        | As of 1.5.2 the protocol version is 61. See [Protocol version numbers](Protocol_version_numbers) for list. 
             | Username         | string     |  _AlexM   | The username of the player attempting to connect 
-			| Server Host      | string     | localhost | 
-			| Server Port      | int        | 25565     | 
+            | Server Host      | string     | localhost | 
+            | Server Port      | int        | 25565     | 
 Total Size: | 10 bytes + length of strings
 
 Chat Message (0x03)
