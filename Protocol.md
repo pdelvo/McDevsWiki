@@ -133,3 +133,20 @@ Packet ID   | Field Name   | Field Type | Example | Notes
             | Mouse button | boolean    | -true   | true when the player is left-clicking and false when right-clicking.
 Total Size: | 10 bytes
 
+
+Update Health (0x08)
+----------------
+*Server to Client*
+
+Sent by the server to update/set the health of the player it is sent to. Added in protocol version 5. 
+
+Food saturation acts as a food "overcharge". Food values will not decrease while the saturation is over zero. Players logging in automatically get a saturation of 5.0. Eating food increases the saturation as well as the food bar. 
+
+
+Packet ID   | Field Name      | Field Type | Example | Notes
+------------|-----------------|------------|---------|----------------------------
+0x08        | Health          | short      | 20      | 0 or less = dead, 20 = full HP
+            | Food            | short      | 20      | 0 - 20
+            | Food Saturation | float      | 5.0     | Seems to vary from 0.0 to 5.0 in integer increments
+Total Size: | 9 bytes
+
