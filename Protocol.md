@@ -4,12 +4,12 @@ If you're having trouble, check out the [FAQ](Protocol_FAQ) or ask for help in t
 
 **Note**: While you may use the contents of this page without restriction to create servers, clients, bots, etc… you still need to provide attribution to #mcdevs if you copy any of the contents of this page for publication elsewhere.
 
-                                     | Definition                               
- ----------------------------------- | --------------------------------------------------------------------------------------
- Player                              | When used in the singular, Player always refers to the client connected to the server
- Entity                              | Entity refers to any item, player, mob, minecart or boat in the world. This definition is subject to change as Notch extends the protocol
- EID                                 | An EID - or Entity ID - is a unique 4-byte integer used to identify a specific entity 
- XYZ                                 | In this document, the axis names are the same as those used by Notch. Y points upwards, X points South, and Z points West.
+       | Definition                               
+-------| --------------------------------------------------------------------------------------
+Player | When used in the singular, Player always refers to the client connected to the server
+Entity | Entity refers to any item, player, mob, minecart or boat in the world. This definition is subject to change as Notch extends the protocol
+EID    | An EID - or Entity ID - is a unique 4-byte integer used to identify a specific entity 
+XYZ    | In this document, the axis names are the same as those used by Notch. Y points upwards, X points South, and Z points West.
 
 Packets
 ========
@@ -692,3 +692,171 @@ Packet ID   | Field Name         | Field Type                                  |
 Total Size: | 5 bytes + Metadata
 
 
+Entity Effect (0x29) 
+----------------
+*Server to Client*
+
+
+Packet ID   | Field Name | Field Type | Example | Notes
+------------|------------|------------|---------|---------------------
+0x29        | Entity ID  | int        | 14      | Entity ID of a player
+            | Effect ID  | byte       | 17      | See [here](Potion_effect#Parameters) 
+            | Amplifier  | byte       | 0       | 
+            | Duration   | short      | 64      | 
+Total Size: | 9 bytes
+
+
+Remove Entity Effect (0x2A) 
+----------------
+*Server to Client*
+
+
+Packet ID   | Field Name | Field Type | Example | Notes
+------------|------------|------------|---------|---------------------
+0x2A        | Entity ID  | int        | 14      | Entity ID of a player
+            | Effect ID  | byte       | 17      | See [here](Potion_effect#Parameters) 
+Total Size: | 6 bytes
+
+
+Set Experience (0x2B) 
+----------------
+*Server to Client*
+
+Sent by the server when the client should change experience levels. 
+
+Packet ID   | Field Name       | Field Type | Example | Notes
+------------|------------------|------------|---------|---------------------
+0x2B        | Experience bar   | float      | 0.59601 | Used for drawing the experience bar - value is between 0 and 1. 
+            | Level            | short      | 8       | 
+            | Total experience | short      | 130     | 
+Total Size: | 9 bytes
+
+
+Chunk Data (0x33)
+----------------
+*Server to Client*
+
+See also: [SMP Map Format](SMP_Map_Format)
+
+Packet ID   | Field Name           | Field Type          | Example | Notes
+------------|----------------------|---------------------|---------|---------------------
+0x33        | X                    | int                 | 5       | Chunk X Coordinate (*16 to get true X) 
+            | Z                    | int                 | 5       | Chunk Z Coordinate (*16 to get true Z) 
+            | Ground-up continuous | boolean             | 1       | This is True if the packet represents all sections in this vertical column, where the primary bit map specifies exactly which sections are included, and which are air. 
+            | Primary bit map      | unsigned short      |         | Bitmask with 1 for every 16x16x16 section which data follows in the compressed data.  
+            | Add bit map          | unsigned short      | 0       | Same as above, but this is used exclusively for the 'add' portion of the payload 
+            | Compressed size      | int                 |         | Size of compressed chunk data. 
+            | Compressed data      | unsigned byte array | ...     | The chunk data is compressed using ZLib Deflate function. 
+Total Size: | 18 bytes + Compressed chunk size 
+
+
+Multi Block Change (0x34) 
+----------------
+*Server to Client*
+
+
+Packet ID   | Field Name   | Field Type          | Example | Notes
+------------|--------------|---------------------|---------|---------------------
+0x34        | Chunk X      | int                 | -9      | Chunk X Coordinate (*16 to get true X) 
+            | Chunk Z      | int                 | 12      | Chunk Z Coordinate (*16 to get true Z) 
+            | Record count | short               |         | The number of blocks affected
+            | Data size    | int                 |         | The total size of the data, in bytes. Should always be 4*record count - please confirm. 
+            | Data         |                     | ...     | Coordinates, type, and metadata of blocks to change (see below table). 
+Total Size: | 15 bytes + Arrays
+
+Each record is four bytes. 
+
+Bit mask    | Width   | Meaning
+------------|---------|------------------
+00 00 00 0F | 4 bits  | Block metadata  
+00 00 FF F0 | 12 bits | Block ID  
+00 FF 00 00 | 8 bits  | Y co-ordinate  
+0F 00 00 00 | 4 bits  | Z co-ordinate, relative to chunk  
+F0 00 00 00 | 4 bits  | X co-ordinate, relative to chunk  
+
+
+Block Change (0x35) 
+----------------
+*Server to Client*
+
+
+Packet ID   | Field Name     | Field Type          | Example | Notes
+------------|----------------|---------------------|---------|---------------------
+0x35        | X              | int                 | 502     | Block X Coordinate 
+            | Y              | byte                | 71      | Block Y Coordinate 
+            | Z              | int                 | 18      | Block Z Coordinate 
+            | Block Type     | short               | 78      | The new block type for the block
+            | Block Metadata | int                 | 0       | The new Metadata for the block
+Total Size: | 13 bytes
+
+
+Block Action (0x36)
+----------------
+*Server to Client*
+
+This packet is used for a number of things: 
+
+- Chests opening and closing 
+- Pistons pushing and pulling 
+- Note blocks playing 
+
+
+
+Packet ID   | Field Name     | Field Type          | Example | Notes
+------------|----------------|---------------------|---------|---------------------
+0x36        | X              | int                 | 502     | Block X Coordinate 
+            | Y              | short               | 71      | Block Y Coordinate 
+            | Z              | int                 | 18      | Block Z Coordinate 
+            | Byte 1         | byte                | 3       | Varies depending on block - see below
+            | Byte 2         | byte                | 17      | Varies depending on block - see below 
+            | Block ID       | short               | 29      | The block id this action is set for 
+Total Size: | 15 bytes
+
+
+See Also: [Block Actions](Block_Actions)
+
+
+Block Break Animation (0x37)
+----------------
+*Server to Client*
+
+
+Packet ID   | Field Name     | Field Type          | Example | Notes
+------------|----------------|---------------------|---------|---------------------
+0x37        | Entity ID      | int                 | 123     | B Entity breaking the block? 
+            | X              | int                 | 71      | Block X Coordinate 
+            | Y              | int                 | 18      | Block Y Coordinate 
+            | Z              | int                 | 3       | Block Z Coordinate 
+            | Destroy Stage  | byte                | 3       | How far destroyed this block is.
+Total Size: | 18 bytes
+
+
+Map Chunk Bulk (0x38) 
+----------------
+*Server to Client*
+
+See also: [SMP Map Format](SMP_Map_Format)
+
+To reduce the number of bytes this packet is used to send chunks together for better compression results. 
+
+
+Packet ID   | Field Name           | Field Type          | Example | Notes
+------------|----------------------|---------------------|---------|---------------------
+0x38        | Chunk column count   | short               |         | The number of chunks in this packet 
+            | Data length          | int                 |         | The size of the data field  
+            | Sky light sent       | boolean             |         | Whether or not the chunk data contains a light nibble array. This is true in the main world, false in the end + nether 
+            | Data                 | byte array          |         | Compressed chunk data  
+            | Meta information     | See below           |         | See below  
+Total Size: | 8 + (Chunk data size) + 12 * (Chunk Count) bytes
+
+### Meta Information Structure
+
+This structure is repeated for each chunk column sent
+
+Field Name     | Field Type     | Example | Notes
+---------------|----------------|---------|-------------------------
+Chunk X        | int            | 10      | The X coordinate of the specific chunk  
+Chunk Z        | int            | 10      | The Z coordinate of the specific chunk  
+Primary bitmap | unsigned short | 15      | A bitmap which specifies which sections are not empty in this chunk  
+Add bitmap     | unsigned short | 0       | A bitmap which specifies which sections need add information because of very high block ids. not yet used. needs verification  
+Total Size:    | 12 bytes  
