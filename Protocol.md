@@ -217,7 +217,7 @@ You can get a unit vector from a given yaw/pitch via:
 	y = -sin(pitch)
 	z =  cos(pitch) * cos(yaw)
 
-![The unit circle for yaw](images/Minecraft-trig-yaw.png)
+[![The unit circle for yaw](images/Minecraft-trig-yaw-small.png)](images/Minecraft-trig-yaw.png)
 
 Packet ID   | Field Name | Field Type | Example | Notes
 ------------|------------|------------|---------|----------------------------
