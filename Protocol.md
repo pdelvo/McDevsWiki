@@ -221,9 +221,183 @@ You can get a unit vector from a given yaw/pitch via:
 
 Packet ID   | Field Name | Field Type | Example | Notes
 ------------|------------|------------|---------|----------------------------
-0x0C        | Yaw        | double     | 0.00    | Absolute rotation on the X Axis, in degrees
-            | Pitch      | double     | 0x00    | Absolute rotation on the Y Axis, in degrees  
+0x0C        | Yaw        | float      | 0.00    | Absolute rotation on the X Axis, in degrees
+            | Pitch      | float      | 0x00    | Absolute rotation on the Y Axis, in degrees  
             | On Ground  | boolean    | 1       | Derived from packet [0x0A](Protocol#player-0x0A)
 Total Size: | 10 bytes
 
+
+Player Position and Look (0x0D)
+----------------
+*Two Way*
+
+A combination of [Player Look](Protocol#player-look-0x0C) and [Player Position](Protocol#player-position-0x0B). 
+
+Note: When this packet is sent from the server, the 'Y' and 'Stance' fields are swapped. 
+
+
+Packet ID   | Field Name | Field Type | Example | Notes
+------------|------------|------------|---------|----------------------------
+0x0D        | X          | double     | 102.809 | Absolute position 
+            | Y          | double     | 70.00   | Absolute position 
+            | Stance     | double     | 71.62   | Used to modify the players bounding box when going up stairs, crouching, etc…
+            | Z          | double     | 68.30   | Absolute position
+            | Yaw        | float      | 0.00    | Absolute rotation on the X Axis, in degrees
+            | Pitch      | float      | 0x00    | Absolute rotation on the Y Axis, in degrees  
+            | On Ground  | boolean    | 0       | Derived from packet [0x0A](Protocol#player-0x0A)
+Total Size: | 42 bytes
+
+
+Player Digging (0x0E)
+----------------
+*Client to Server*
+
+Sent when the player mines a block. A Notchian server only accepts digging packets with coordinates within a 6-unit radius of the player's position. 
+
+
+Packet ID   | Field Name | Field Type | Example | Notes
+------------|------------|------------|---------|----------------------------
+0x0E        | Status     | byte       | 1       | The action the player is taking against the block (see below)
+0x0E        | X          | int        | 32      | Block position 
+            | Y          | byte       | 64      | Block position
+            | Z          | int        | 32      | Block position
+            | Face       | byte       | 3       | The face being hit (see below)
+Total Size: | 12 bytes
+
+Status can (currently) be one of six values:
+
+Meaning                     | Value
+----------------------------|-------
+Started digging             | 0
+Cancelled digging           | 1
+Finished digging            | 2
+Drop item stack             | 3
+Drop item                   | 4
+Shoot arrow / finish eating | 5
+
+Notchian clients send a 0 (started digging) when they start digging and a 2 (finished digging) once they think they are finished. If digging is aborted, the client simply send a 1 (Cancel digging). 
+
+Status code 4 (drop item) is a special case. In-game, when you use the Drop Item command (keypress 'q'), a dig packet with a status of 4, and all other values set to 0, is sent from client to server. Status code 3 is similar, but drops the entire stack. 
+
+Status code 5 (shoot arrow / finish eating) is also a special case. The x, y and z fields are all set to 0 like above, with the exception of the face field, which is set to 255. 
+
+The face can be one of six values, representing the face being hit: 
+
+Value  |  0 |  1 |  2 |  3 |  4 |  5
+-------|----|----|----|----|----|-----
+Offset | -Y | +Y | -Z | +Z | -X | +X
+
+In 1.7.3, when a player opens a door with left click the server receives Packet 0xE+start digging and opens the door. 
+
+
+Player Block Placement (0x0F)
+----------------
+*Client to Server*
+
+Packet ID   | Field Name        | Field Type        | Example | Notes
+------------|-------------------|-------------------|---------|----------------------------
+0x0F        | X                 | int               | 32      | Block position
+            | Y                 | unsigned byte     | 64      | Block position
+            | Z                 | int               | 32      | Block position
+            | Direction         | byte              | 3       | The offset to use for block/item placement (see below) 
+            | Held item         | [slot](Slot_Data) |         | 
+            | Cursor position X | byte              | 0-16    | The position of the crosshair on the block 
+            | Cursor position Y | byte              | 0-16    | 
+            | Cursor position Z | byte              | 0-16    | 
+Total Size: | 14 bytes + slot data
+
+In normal operation (ie placing a block), this packet is sent once, with the values set normally. 
+
+This packet has a special case where X, Y, Z, and Direction are all -1. (Note that Y is unsigned so set to 255.) This special packet indicates that the currently held item for the player should have its state updated such as eating food, shooting bows, using buckets, etc. 
+
+In a Notchian Beta client, the block or item ID corresponds to whatever the client is currently holding, and the client sends one of these packets any time a right-click is issued on a surface, so no assumptions can be made about the safety of the ID. However, with the implementation of server-side inventory, a Notchian server seems to ignore the item ID, instead operating on server-side inventory information and holding selection. The client has been observed (1.2.5 and 1.3.2) to send both real item IDs and -1 in a single session. 
+
+Special note on using buckets: When using buckets, the Notchian client might send two packets: first a normal and then a special case. The first normal packet is sent when you're looking at a block (e.g. the water you want to scoop up). This normal packet does not appear to do anything with a Notchian server. The second, special case packet appears to perform the action - based on current position/orientation and with a distance check - it appears that buckets can only be used within a radius of 6 units. 
+
+
+Held Item Change (0x10)
+----------------
+*Two-Way*
+
+Sent when the player changes the slot selection 
+
+
+Packet ID   | Field Name | Field Type | Example | Notes
+------------|------------|------------|---------|----------------------------
+0x10        | Slot ID    | short      | 1       | The slot which the player has selected (0-8)
+Total Size: | 3 bytes
+
+
+Use Bed (0x11)
+----------------
+*Server to Client*
+
+This packet tells that a player goes to bed. 
+
+The client with the matching Entity ID will go into bed mode. 
+
+This Packet is sent to all nearby players including the one sent to bed. 
+
+
+Packet ID   | Field Name    | Field Type | Example | Notes
+------------|---------------|------------|---------|----------------------------
+0x11        | Entity ID     | int        | 89      | Player ID
+            | Unknown       | byte       | 0       | Only 0 has been observed 
+            | X coordinate  | int        | -247    | Bed headboard X as block coordinate
+            | Y coordinate  | byte       | 78      | Bed headboard Y as block coordinate
+            | Z coordinate  | int        | 128     | Bed headboard Z as block coordinate
+Total Size: | 15 bytes
+
+
+Animation (0x12)
+----------------
+*Two-Way*
+
+Sent whenever an entity should change animation. 
+
+
+Packet ID   | Field Name    | Field Type | Example | Notes
+------------|---------------|------------|---------|----------------------------
+0x12        | Entity ID     | int        | 55534   | Player ID
+            | Animation     | byte       | 1       | Animation ID
+Total Size: | 6 bytes
+
+Animation can be one of the following values: 
+
+ID  | Animation
+----|------------
+0   | No animation
+1   | Swing arm
+2   | Damage animation
+3   | Leave bed
+5   | Eat food
+102 | (unknown)
+104 | Crouch
+105 | Uncrouch
+
+Only 1 (swing arm) is sent by notchian clients. Crouching is sent via 0x13. Damage is server-side, and so is not sent by notchian clients. See also 0x26.
+
+
+Entity Action (0x13) 
+----------------
+*Client to Server*
+
+Sent at least when crouching, leaving a bed, or sprinting. To send action animation to client use 0x28. The client will send this with Action ID = 3 when "Leave Bed" is clicked. 
+
+
+Packet ID   | Field Name    | Field Type | Example | Notes
+------------|---------------|------------|---------|----------------------------
+0x13        | Entity ID     | int        | 55534   | Player ID
+            | Action ID     | byte       | 1       | The ID of the action, see below.
+Total Size: | 6 bytes
+
+Action ID can be one of the following values:  
+
+ID  | Animation
+----|------------
+1   | Crouch
+2   | Uncrouch
+3   | Leave bed
+4   | Start sprinting
+5   | Stop sprinting
 
