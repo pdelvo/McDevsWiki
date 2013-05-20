@@ -180,7 +180,7 @@ Packet ID   | Field Name      | Field Type | Example | Notes
             | Difficulty      | byte       | 1       | 0 thru 3 for Peaceful, Easy, Normal, Hard. 1 is always sent c->s
             | Game mode       | byte       | 1       | 0: survival, 1: creative, 2: adventure. The hardcore flag is not included
             | World type      | short      | 256     | Defaults to 256 
-            | Level type      | string     | default | See [0x01 login](#login-request-0x01)
+            | Level type      | string     | default | See [0x01 login](Protocol#login-request-0x01)
 Total Size: | 9 bytes
 
 
