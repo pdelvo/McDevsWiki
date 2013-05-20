@@ -50,10 +50,25 @@ Handshake (0x02)
 
 See [Protocol Encryption](Protocol_Encryption) for information on logging in.
 
-Packet ID   | Field Name    | Field Type | Example   | Notes
+Packet ID   | Field Name       | Field Type | Example   | Notes
 ------------|------------------|------------|-----------|----------------------------
 0x02        | Protocol Version | byte       | 51        | As of 1.5.2 the protocol version is 61. See [Protocol version numbers](Protocol_version_numbers) for list. 
             | Username         | string     |  _AlexM   | The username of the player attempting to connect 
 			| Server Host      | string     | localhost | 
 			| Server Port      | int        | 25565     | 
 Total Size: | 10 bytes + length of strings
+
+Chat Message (0x03)
+----------------
+*Two-Way*
+
+The default server will check the message to see if it begins with a '/'. If it doesn't, the username of the sender is prepended and sent to all other clients (including the original sender). If it does, the server assumes it to be a command and attempts to process it. A message longer than 100 characters will cause the server to kick the client. (As of 1.3.2, the vanilla client appears to limit the text a user can enter to 100 charaters.) This limits the chat message packet length to 203 bytes (as characters are encoded on 2 bytes). Note that this limit does not apply to chat messages sent by the server, which are limited to 32767 characters since 1.2.5. This change was initially done by allowing the client to not slice the message up to 119 (the previous limit), without changes to the server. For this reason, the vanilla server kept the code to cut messages at 119, but this isn't a protocol limitation and can be ignored. 
+
+For more information, see [Chat](Chat). 
+
+
+Packet ID   | Field Name | Field Type | Example            | Notes
+------------|------------|------------|--------------------|----------------------------
+0x03        | Message    | string     | <Bob> Hello World! | User input must be sanitized server-side
+Total Size: | 10 bytes + length of strings
+
