@@ -115,3 +115,21 @@ Packet ID   | Field Name | Field Type | Example | Notes
             | Y          | int        | 70      | Spawn Y in block coordinates
             | Z          | int        | -46     | Spawn Z in block coordinates
 Total Size: | 13 bytes
+
+
+Use Entity (0x07)
+----------------
+*Client to Server*
+
+This packet is sent from the client to the server when the client attacks or right-clicks another entity (a player, minecart, etc). 
+
+A Notchian server only accepts this packet if the entity being attacked/used is visible without obstruction and within a 4-unit radius of the player's position. 
+
+
+Packet ID   | Field Name   | Field Type | Example | Notes
+------------|--------------|------------|---------|----------------------------
+0x07        | User         | int        | 1298    | The entity of the player (ignored by the server) 
+            | Target       | int        | 1805    | The entity the player is interacting with 
+            | Mouse button | boolean    | -true   | true when the player is left-clicking and false when right-clicking.
+Total Size: | 10 bytes
+
