@@ -401,3 +401,294 @@ ID  | Animation
 4   | Start sprinting
 5   | Stop sprinting
 
+
+Spawn Named Entity (0x14)
+----------------
+*Server to Client*
+
+The only named entities (at the moment) are players (either real or NPC/Bot). This packet is sent by the server when a player comes into visible range, not when a player joins. 
+
+Servers can, however, safely spawn player entities for players not in visible range. The client appears to handle it correctly. 
+
+At one point, the Notchian client was not okay with receiving player entity packets, including 0x14, that refer to its own username or EID; and would teleport to the absolute origin of the map and fall through the Void any time it received them. However, in more recent versions, it appears to handle them correctly, by spawning a new entity as directed (though future packets referring to the entity ID may be handled incorrectly). 
+
+
+Packet ID   | Field Name    | Field Type                                  | Example | Notes
+------------|---------------|---------------------------------------------|---------|----------------------------
+0x14        | Entity ID     | int                                         | 94453   | Player ID
+            | Player Name   | string                                      | Twdtwd  | Max length of 16 
+            | X             | int                                         | 784     | Player X as Absolute Integer
+            | Y             | int                                         | 2131    | Player Y as Absolute Integer
+            | Z             | int                                         | -752    | Player Z as Absolute Integer
+            | Yaw           | byte                                        | 0       | Player rotation as a packed byte  
+            | Pitch         | byte                                        | 0       | Player rotation as a packed byte  
+            | Current Item  | short                                       | 0       | The item the player is currently holding. Note that this should be 0 for "no item", unlike -1 used in other packets. A negative value crashes clients.  
+            | Metadata      | [Metadata](Entities#Entity_Metadata_Format) |         | The 1.3 client crashes on packets with no metadata, but the server can send any metadata key of 0, 1 or 8 and the client is fine. 
+Total Size: | 22 bytes + length of strings + metadata (at least 1)
+
+
+Collect Item (0x16) 
+----------------
+*Client to Server*
+
+Sent at least when crouching, leaving a bed, or sprinting. To send action animation to client use 0x28. The client will send this with Action ID = 3 when "Leave Bed" is clicked. 
+
+
+Packet ID   | Field Name    | Field Type | Example | Notes
+------------|---------------|------------|---------|----------------------------
+0x16        | Collected EID | int        | 38      |
+            | Collector EID | int        | 20      |
+Total Size: | 9 bytes
+
+
+Spawn Object/Vehicle (0x17) 
+---------------------------
+*Server to Client*
+
+Sent by the server when an Object/Vehicle is created. The throwers entity id is now used for fishing floats too. 
+
+
+Packet ID   | Field Name    | Field Type                 | Example | Notes
+------------|---------------|----------------------------|---------|----------------------------
+0x17        | Entity ID     | int                        | 62      | Entity ID of the Object  
+            | Type          | byte                       | 11      | The type of object (see [Objects](Entities#Objects)) 
+            | X             | int                        | 16080   | The Absolute Integer X Position of the object
+            | Y             | int                        | 2299    | The Absolute Integer Y Position of the object
+            | Z             | int                        | 592     | The Absolute Integer Z Position of the object
+            | Yaw           | byte                       | 0       | The yaw in steps of 2p/256  
+            | Pitch         | byte                       | 67      | The pitch in steps of 2p/256
+            | Object Data   | [Object Data](Object_Data) |         | [Object Data](Object_Data)
+Total Size: | 23 or 29 bytes
+
+
+Spawn Mob (0x18)
+----------------
+*Server to Client*
+
+Sent by the server when a Mob Entity is Spawned 
+
+
+Packet ID   | Field Name    | Field Type                                  | Example | Notes
+------------|---------------|---------------------------------------------|---------|----------------------------
+0x18        | Entity ID     | int                                         | 446     | Entity ID
+            | Type          | byte                                        | 11      | The type of mob (see [Objects](Entities#Mobs)) 
+            | X             | int                                         | 784     | The Absolute Integer X Position of the object
+            | Y             | int                                         | 2131    | The Absolute Integer Y Position of the object
+            | Z             | int                                         | -752    | The Absolute Integer Z Position of the object 
+            | Pitch         | byte                                        | 0       | The pitch in steps of 2p/256  
+            | Head Pitch    | byte                                        | 10      | The head pitch in steps of 2p/256 
+            | Yaw           | byte                                        | -27     | The yaw in steps of 2p/256  
+            | Velocity X    | short                                       | 0       | 
+            | Velocity Y    | short                                       | 0       | 
+            | Velocity Z    | short                                       | 0       | 
+            | Metadata      | [Metadata](Entities#Entity_Metadata_Format) | 0 0 127 | Varies by mob, see [Entities](Entities)
+Total Size: | 27 bytes + Metadata (at least 3 as you must send at least 1 item of metadata)
+
+
+Spawn Painting (0x19) 
+----------------
+*Server to Client*
+
+This packet shows location, name, and type of painting.
+
+
+Packet ID   | Field Name    | Field Type                                  | Example  | Notes
+------------|---------------|---------------------------------------------|----------|----------------------------
+0x19        | Entity ID     | int                                         | 446      | Entity ID
+            | Title         | string                                      | Creepers | Name of the painting; max length 13 (length of "SkullAndRoses")
+            | X             | int                                         | 50       | Center X coordinate 
+            | Y             | int                                         | 66       | Center Y coordinate 
+            | Z             | int                                         | -50      | Center Z coordinate 
+            | Direction     | int                                         | 0        | Direction the painting faces (0 -z, 1 -x, 2 +z, 3 +x)  
+Total Size: | 23 bytes + length of string
+
+Calculating the center of an image: given a (width x height) grid of cells, with (0, 0) being the top left corner, the center is (max(0, width / 2 - 1), height / 2). E.g. 
+
+2x1 (1, 0) 4x4 (1, 2) 
+
+
+Entity Velocity (0x1C) 
+----------------
+*Server to Client*
+
+This packet is new to version 4 of the protocol, and is believed to be Entity Velocity/Motion. 
+
+Velocity is believed to be in units of 1/8000 of a block per server tick (50ms); for example, -1343 would move (-1343 / 8000) = −0.167875 blocks per tick (or −3,3575 blocks per second). 
+
+(This packet data values are not fully verified) 
+
+
+Packet ID   | Field Name    | Field Type | Example | Notes
+------------|---------------|------------|---------|----------------------------
+0x1C        | Entity ID     | int        | 1805    | Entity ID
+            | Velocity X    | short      | -1343   | Velocity on the X axis 
+            | Velocity Y    | short      | 0       | Velocity on the Y axis 
+            | Velocity Z    | short      | 0       | Velocity on the Z axis 
+Total Size: | 11 bytes
+
+
+Destroy Entity (0x1D) 
+----------------
+*Server to Client*
+
+Sent by the server when an list of Entities is to be destroyed on the client. 
+
+
+Packet ID   | Field Name    | Field Type   | Example       | Notes
+------------|---------------|--------------|---------------|----------------------------
+0x1D        | Entity Count  | int          | 3             | The amount of entities which should be destroyed 
+            | Entity IDs    | array of int | 452, 546, 123 | The list of entity ids which should be destroyed 
+Total Size: | 2 + (entity count * 4) bytes
+
+Entity (0x1E) 
+----------------
+*Server to Client*
+
+Sent by the server when an list of Entities is to be destroyed on the client. 
+
+
+Packet ID   | Field Name    | Field Type   | Example       | Notes
+------------|---------------|--------------|---------------|----------------------------
+0x1E        | Entity ID     | int          | 446           | Entity ID
+Total Size: | 5 bytes
+
+
+Entity Relative Move (0x1F)
+----------------
+*Server to Client*
+
+This packet is sent by the server when an entity moves less then 4 blocks; if an entity moves more than 4 blocks [Entity Teleport](Protocol#entity-teleport-0x22) should be sent instead. 
+
+This packet allows at most four blocks movement in any direction, because byte range is from -128 to 127. Movement is an offset of Absolute Int; to convert relative move to block coordinate offset, divide by 32. 
+
+
+
+Packet ID   | Field Name    | Field Type   | Example       | Notes
+------------|---------------|--------------|---------------|----------------------------
+0x1F        | Entity ID     | int          | 446           | Entity ID
+            | dX            | byte         | 1             | X axis Relative movement as an Absolute Integer 
+            | dY            | byte         | -7            | Y axis Relative movement as an Absolute Integer 
+            | dZ            | byte         | 5             | Z axis Relative movement as an Absolute Integer 
+Total Size: | 8 bytes
+
+
+Entity Look (0x20) 
+----------------
+*Server to Client*
+
+This packet is sent by the server when an entity rotates. Example: "Yaw" field 64 means a 90 degree turn. 
+
+
+Packet ID   | Field Name    | Field Type   | Example       | Notes
+------------|---------------|--------------|---------------|----------------------------
+0x20        | Entity ID     | int          | 459           | Entity ID
+            | Yaw           | byte         | 126           | The X Axis rotation as a fraction of 360
+            | Pitch         | byte         | 0             | The Y Axis rotation as a fraction of 360
+Total Size: | 7 bytes
+
+
+Entity Look and Relative Move (0x21)
+----------------
+*Server to Client*
+
+This packet is sent by the server when an entity rotates and moves. Since a byte range is limited from -128 to 127, and movement is offset of Absolute Int, this packet allows at most four blocks movement in any direction. (-128/32 == -4) 
+
+
+Packet ID   | Field Name    | Field Type   | Example       | Notes
+------------|---------------|--------------|---------------|----------------------------
+0x21        | Entity ID     | int          | 446           | Entity ID
+            | dX            | byte         | 1             | X axis Relative movement as an Absolute Integer 
+            | dY            | byte         | -7            | Y axis Relative movement as an Absolute Integer 
+            | dZ            | byte         | 5             | Z axis Relative movement as an Absolute Integer 
+            | Yaw           | byte         | 126           | The X Axis rotation as a fraction of 360
+            | Pitch         | byte         | 0             | The Y Axis rotation as a fraction of 360
+Total Size: | 10 bytes
+
+
+Entity Teleport (0x22)
+----------------
+*Server to Client*
+
+This packet is sent by the server when an entity moves more than 4 blocks. 
+
+
+Packet ID   | Field Name    | Field Type   | Example       | Notes
+------------|---------------|--------------|---------------|----------------------------
+0x22        | Entity ID     | int          | 459           | Entity ID
+            | X             | int          | 14162         | X axis position as an Absolute Integer 
+            | Y             | int          | 2176          | Y axis position as an Absolute Integer 
+            | Z             | int          | 1111          | Z axis position as an Absolute Integer 
+            | Yaw           | byte         | 126           | The X Axis rotation as a fraction of 360
+            | Pitch         | byte         | 0             | The Y Axis rotation as a fraction of 360
+Total Size: | 19 bytes
+
+
+Entity Head Look (0x23)
+----------------
+*Server to Client*
+
+Changes the direction an entity's head is facing. 
+
+
+Packet ID   | Field Name    | Field Type   | Example       | Notes
+------------|---------------|--------------|---------------|----------------------------
+0x23        | Entity ID     | int          | 446           | Entity ID
+            | Head Yaw      | byte         | 1             | Head yaw in steps of 2p/256
+Total Size: | 6 bytes
+
+
+Entity Status (0x26)
+----------------
+*Server to Client*
+
+
+Packet ID   | Field Name    | Field Type   | Example       | Notes
+------------|---------------|--------------|---------------|----------------------------
+0x26        | Entity ID     | int          | 34353         | Entity ID
+            | Entity Status | byte         | 0x03          | See below
+Total Size: | 6 bytes
+
+Entity Status | Meaning
+--------------|---------
+2             |  Entity hurt  
+3             |  Entity dead  
+6             |  Wolf taming  
+7             |  Wolf tamed  
+8             |  Wolf shaking water off itself  
+9             |  (of self) Eating accepted by server  
+10            |  Sheep eating grass  
+11            |  Iron Golem handing over a rose  
+12            |  Spawn "heart" particles near a villager  
+13            |  Spawn particles indicating that a villager is angry and seeking revenge  
+14            |  Spawn happy particles near a villager  
+15            |  Spawn a "magic" particle near the Witch  
+16            |  Zombie converting into a villager by shaking violently  
+17            |  A firework exploding  
+
+
+Attach Entity (0x27)
+----------------
+*Server to Client*
+
+This packet is sent when a player has been attached to an entity (e.g. Minecart)
+
+
+Packet ID   | Field Name    | Field Type   | Example       | Notes
+------------|---------------|--------------|---------------|----------------------------
+0x27        | Entity ID     | int          | 1298          | The player entity ID being attached
+            | Vehicle ID    | int          | 1805          | The vehicle entity ID attached to (-1 for unattaching)
+Total Size: | 9 bytes
+
+
+Entity Metadata (0x28) 
+----------------
+*Server to Client*
+
+
+Packet ID   | Field Name         | Field Type                                  | Example        | Notes
+------------|--------------------|---------------------------------------------|----------------|----------------------------
+0x28        | Entity ID          | int                                         | 0x00000326     | Unique entity ID to update. 
+            | Entity Metadata    | [Metadata](Entities#Entity_Metadata_Format) | 0x00 0x01 0x7F | Metadata varies by entity. See [Entities](Entities)
+Total Size: | 5 bytes + Metadata
+
+
