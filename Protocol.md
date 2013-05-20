@@ -85,7 +85,20 @@ The default SMP server increments the time by 20 every second.
 
 
 Packet ID   | Field Name       | Field Type | Example  | Notes
-------------|------------------|------------|------    |----------------------------
+------------|------------------|------------|----------|----------------------------
 0x04        | Age of the world | long       | 45464654 | In ticks; not changed by server commands
             | Time of Day      | long       | 21321    | The world (or region) time, in ticks
-Total Size: | 17 Bytes 
+Total Size: | 17 Bytes
+
+
+Entity Equipment (0x05)
+----------------
+*Server to Client*
+
+Packet ID   | Field Name | Field Type        | Example    | Notes
+------------|------------|-------------------|------------|----------------------------
+0x04        | Entity ID  | int               | 0x00010643 | Named Entity ID 
+            | Slot       | short             | 4          | Equipment slot: 0=held, 1-4=armor slot (1 - boots, 2 - leggings, 3 - chestplate, 4 - helmet) 
+            | Item       | [slot](Slot_Data) |            | Item in slot format
+Total Size: | 7 bytes + slot data
+
