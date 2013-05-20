@@ -19,6 +19,7 @@ All packets begin with a single "Packet ID" byte. Listed packet size includes th
 Keep Alive (0x00)
 -----------------
 *Two-Way*
+
 The server will frequently send out a keep-alive, each containing a random ID. The client must respond with the same packet. The Beta server will disconnect a client if it doesn't receive at least one packet before 1200 in-game ticks, and the Beta client will time out the connection under the same conditions. The client may send packets with Keep-alive ID=0.
 
 Packet ID   | Field Name    | Field Type | Example   | Notes
@@ -42,3 +43,17 @@ Packet ID   | Field Name    | Field Type | Example   | Notes
 			| Not used      | byte       | 0         | Only 0 observed from vanilla server, was previously world height 
 			| Max players   | byte       | 8         | Used by the client to draw the player list 
 Total Size: | 12 bytes + length of strings
+
+Handshake (0x02)
+----------------
+*Client to server*
+
+See [Protocol Encryption](Protocol_Encryption) for information on logging in.
+
+Packet ID   | Field Name    | Field Type | Example   | Notes
+------------|------------------|------------|-----------|----------------------------
+0x02        | Protocol Version | byte       | 51        | As of 1.5.2 the protocol version is 61. See [Protocol version numbers](Protocol_version_numbers) for list. 
+            | Username         | string     |  _AlexM   | The username of the player attempting to connect 
+			| Server Host      | string     | localhost | 
+			| Server Port      | int        | 25565     | 
+Total Size: | 10 bytes + length of strings
