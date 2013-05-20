@@ -150,3 +150,37 @@ Packet ID   | Field Name      | Field Type | Example | Notes
             | Food Saturation | float      | 5.0     | Seems to vary from 0.0 to 5.0 in integer increments
 Total Size: | 9 bytes
 
+
+Update Health (0x08)
+----------------
+*Server to Client*
+
+Sent by the server to update/set the health of the player it is sent to. Added in protocol version 5. 
+
+Food saturation acts as a food "overcharge". Food values will not decrease while the saturation is over zero. Players logging in automatically get a saturation of 5.0. Eating food increases the saturation as well as the food bar. 
+
+
+Packet ID   | Field Name      | Field Type | Example | Notes
+------------|-----------------|------------|---------|----------------------------
+0x08        | Health          | short      | 20      | 0 or less = dead, 20 = full HP
+            | Food            | short      | 20      | 0 - 20
+            | Food Saturation | float      | 5.0     | Seems to vary from 0.0 to 5.0 in integer increments
+Total Size: | 9 bytes
+
+
+Respawn (0x09)
+----------------
+*Server to Client*
+
+To change the player's dimension (overworld/nether/end), send them a respawn packet with the appropriate dimension, followed by prechunks/chunks for the new dimension, and finally a position and look packet. You do not need to unload chunks, the client will do it automatically. 
+
+Packet ID   | Field Name      | Field Type | Example | Notes
+------------|-----------------|------------|---------|----------------------------
+0x09        | Dimension       | int        | 1       | -1: The Nether, 0: The Overworld, 1: The End
+            | Difficulty      | byte       | 1       | 0 thru 3 for Peaceful, Easy, Normal, Hard. 1 is always sent c->s
+            | Game mode       | byte       | 1       | 0: survival, 1: creative, 2: adventure. The hardcore flag is not included
+            | World type      | short      | 256     | Defaults to 256 
+            | Level type      | string     | default | See [0x01 login](#login-request-0x01)
+Total Size: | 9 bytes
+
+
