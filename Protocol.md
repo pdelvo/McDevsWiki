@@ -102,3 +102,16 @@ Packet ID   | Field Name | Field Type        | Example    | Notes
             | Item       | [slot](Slot_Data) |            | Item in slot format
 Total Size: | 7 bytes + slot data
 
+
+Spawn Position (0x06)
+----------------
+*Server to Client*
+
+Sent by the server after login to specify the coordinates of the spawn point (the point at which players spawn at, and which the compass points to). It can be sent at any time to update the point compasses point at. 
+
+Packet ID   | Field Name | Field Type | Example | Notes
+------------|------------|------------|---------|----------------------------
+0x06        | X          | int        | 117     | Spawn X in block coordinates
+            | Y          | int        | 70      | Spawn Y in block coordinates
+            | Z          | int        | -46     | Spawn Z in block coordinates
+Total Size: | 13 bytes
