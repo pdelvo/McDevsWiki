@@ -72,3 +72,20 @@ Packet ID   | Field Name | Field Type | Example            | Notes
 0x03        | Message    | string     | <Bob> Hello World! | User input must be sanitized server-side
 Total Size: | 10 bytes + length of strings
 
+
+Time Update (0x04)
+----------------
+*Server to Client*
+
+Time is based on ticks, where 20 ticks happen every second. There are 24000 ticks in a day, making Minecraft days exactly 20 minutes long. 
+
+The time of day is based on the timestamp modulo 24000. 0 is sunrise, 6000 is noon, 12000 is sunset, and 18000 is midnight. 
+
+The default SMP server increments the time by 20 every second. 
+
+
+Packet ID   | Field Name       | Field Type | Example  | Notes
+------------|------------------|------------|------    |----------------------------
+0x04        | Age of the world | long       | 45464654 | In ticks; not changed by server commands
+            | Time of Day      | long       | 21321    | The world (or region) time, in ticks
+Total Size: | 17 Bytes 
