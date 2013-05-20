@@ -151,23 +151,6 @@ Packet ID   | Field Name      | Field Type | Example | Notes
 Total Size: | 9 bytes
 
 
-Update Health (0x08)
-----------------
-*Server to Client*
-
-Sent by the server to update/set the health of the player it is sent to. Added in protocol version 5. 
-
-Food saturation acts as a food "overcharge". Food values will not decrease while the saturation is over zero. Players logging in automatically get a saturation of 5.0. Eating food increases the saturation as well as the food bar. 
-
-
-Packet ID   | Field Name      | Field Type | Example | Notes
-------------|-----------------|------------|---------|----------------------------
-0x08        | Health          | short      | 20      | 0 or less = dead, 20 = full HP
-            | Food            | short      | 20      | 0 - 20
-            | Food Saturation | float      | 5.0     | Seems to vary from 0.0 to 5.0 in integer increments
-Total Size: | 9 bytes
-
-
 Respawn (0x09)
 ----------------
 *Server to Client*
@@ -181,6 +164,66 @@ Packet ID   | Field Name      | Field Type | Example | Notes
             | Game mode       | byte       | 1       | 0: survival, 1: creative, 2: adventure. The hardcore flag is not included
             | World type      | short      | 256     | Defaults to 256 
             | Level type      | string     | default | See [0x01 login](Protocol#login-request-0x01)
-Total Size: | 9 bytes
+Total Size: | 11 bytes + length of string 
+
+
+Player (0x0A)
+----------------
+*Client to Server*
+
+This packet is used to indicate whether the player is on ground (walking/swimming), or airborne (jumping/falling). 
+
+When dropping from sufficient height, fall damage is applied when this state goes from False to True. The amount of damage applied is based on the point where it last changed from True to False. Note that there are several movement related packets containing this state. 
+
+This packet was previously referred to as Flying 
+
+
+Packet ID   | Field Name | Field Type | Example | Notes
+------------|------------|------------|---------|----------------------------
+0x0A        | On Ground  | boolean    | 1       | True if the client is on the ground, False otherwise 
+Total Size: | 2 bytes
+
+
+Player Position (0x0B)
+----------------
+*Client to Server*
+
+Updates the players XYZ position on the server. If Stance - Y is less than 0.1 or greater than 1.65, the stance is illegal and the client will be kicked with the message “Illegal Stance”. If the distance between the last known position of the player on the server and the new position set by this packet is greater than 100 units will result in the client being kicked for "You moved too quickly :( (Hacking?)" Also if the absolute number of X or Z is set greater than 3.2E7D the client will be kicked for "Illegal position" 
+
+
+Packet ID   | Field Name | Field Type | Example | Notes
+------------|------------|------------|---------|----------------------------
+0x0B        | X          | double     | 102.809 | Absolute position 
+            | Y          | double     | 70.00   | Absolute position 
+            | Stance     | double     | 71.62   | Used to modify the players bounding box when going up stairs, crouching, etc…
+            | Z          | double     | 68.30   | Absolute position
+            | On Ground  | boolean    | 1       | Derived from packet [0x0A](Protocol#player-0x0A)
+Total Size: | 34 bytes
+
+
+Player Look (0x0C)
+----------------
+*Client to Server*
+
+Updates the direction the player is looking in. 
+
+Yaw is measured in degrees, and does not follow classical trigonometry rules. The unit circle of yaw on the xz-plane starts at (0, 1) and turns backwards towards (-1, 0), or in other words, it turns clockwise instead of counterclockwise. Additionally, yaw is not clamped to between 0 and 360 degrees; any number is valid, including negative numbers and numbers greater than 360. 
+
+Pitch is measured in degrees, where 0 is looking straight ahead, -90 is looking straight up, and 90 is looking straight down. 
+
+You can get a unit vector from a given yaw/pitch via: 
+
+	x = -cos(pitch) * sin(yaw)
+	y = -sin(pitch)
+	z =  cos(pitch) * cos(yaw)
+
+![The unit circle for yaw](images/Minecraft-trig-yaw.png)
+
+Packet ID   | Field Name | Field Type | Example | Notes
+------------|------------|------------|---------|----------------------------
+0x0C        | Yaw        | double     | 0.00    | Absolute rotation on the X Axis, in degrees
+            | Pitch      | double     | 0x00    | Absolute rotation on the Y Axis, in degrees  
+            | On Ground  | boolean    | 1       | Derived from packet [0x0A](Protocol#player-0x0A)
+Total Size: | 10 bytes
 
 
