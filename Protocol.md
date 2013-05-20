@@ -1,6 +1,6 @@
-This page presents a dissection of the current stable [Minecraft](http://minecraft.net/game/) protocol. The current pre-release protocol is documented [elsewhere](Pre-release_protocol.md). The protocol for Pocket Minecraft is substantially different, and is documented at [Pocket Minecraft Protocol](Pocket_Minecraft_Protocol.md).
+This page presents a dissection of the current stable [Minecraft](http://minecraft.net/game/) protocol. The current pre-release protocol is documented [elsewhere](Pre-release_protocol.md). The protocol for Pocket Minecraft is substantially different, and is documented at [Pocket Minecraft Protocol](Pocket_Minecraft_Protocol).
 
-If you're having trouble, check out the [FAQ](Protocol_FAQ.md) or ask for help in the IRC channel ([#mcdevs on irc.freenode.net](irc://irc.freenode.net/mcdevs)).
+If you're having trouble, check out the [FAQ](Protocol_FAQ) or ask for help in the IRC channel ([#mcdevs on irc.freenode.net](irc://irc.freenode.net/mcdevs)).
 
 **Note**: While you may use the contents of this page without restriction to create servers, clients, bots, etc… you still need to provide attribution to #mcdevs if you copy any of the contents of this page for publication elsewhere.
 
@@ -25,3 +25,20 @@ Packet ID   | Field Name    | Field Type | Example   | Notes
 ------------|---------------|------------|-----------|----------------------------
 0x00        | Keep-alive ID | int        | 957759560 | Server-generated random id 
 Total Size: | 5 bytes
+
+Login Request (0x01)
+--------------------
+*Server to Client*
+
+See [Protocol Encryption](Protocol_Encryption) for information on logging in.
+
+Packet ID   | Field Name    | Field Type | Example   | Notes
+------------|---------------|------------|-----------|----------------------------
+0x01        | Entity ID     | int        | 957759560 | Server-generated random id 
+            | Level type    | string     | default   | default, flat, or largeBiomes. level-type in server.properties
+			| Game mode     | byte       | 0         | 0: survival, 1: creative, 2: adventure. Bit 3 (0x8) is the hardcore flag
+			| Dimension     | byte       | 0         | -1: nether, 0: overworld, 1: end 
+			| Difficulty    | byte       | 1         | 0 thru 3 for Peaceful, Easy, Normal, Hard  
+			| Not used      | byte       | 0         | Only 0 observed from vanilla server, was previously world height 
+			| Max players   | byte       | 8         | Used by the client to draw the player list 
+Total Size: | 12 bytes + length of strings
