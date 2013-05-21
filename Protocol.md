@@ -1081,12 +1081,12 @@ This packet is sent by the player when it clicks on a slot in a window.
 
 Packet ID   | Field Name    | Field Type        | Example | Notes
 ------------|---------------|-------------------|---------|---------------------
-0x65        | Window id     | byte              | 0       | The id of the window which was clicked. 0 for player inventory. 
+0x66        | Window id     | byte              | 0       | The id of the window which was clicked. 0 for player inventory. 
             | Slot          | short             | 36      | The clicked slot. See below. 
             | Button        | byte              | 1       | The button used in the click. See below. 
             | Action number | short             | 12      | A unique number for the action, used for transaction handling (See the Transaction packet). 
             | Mode          | byte              | 1       | Inventory operation mode. See below. 
-            | Clicked item  | [slot](Slot_Data) | 0       | 
+            | Clicked item  | [slot](Slot_Data) |         | 
 Total Size: | 8 bytes + slot data
 
 See [inventory windows](Inventory#Windows) for further information about how slots are indexed. 
@@ -1125,9 +1125,387 @@ Mode | Button | Slot     | Trigger
 
 Starting from version 1.5, "painting mode" is available for use in inventory windows. It is done by picking up stack of something (more than 1 items), then holding mouse button (left, right or middle) and dragging holded stack over empty (or same type in case of right button ) slots. In that case client sends the following to server after mouse button release (omitting first pickup packet which is sent as usual): 
 
-1. packet with mode 5, slot -999 , button (0 for left | 4 for right); 
-2. packet for every slot painted on, mode is still 5, button (1 | 5); 
-3. packet with mode 5, slot -999, button (2 | 6); 
+- packet with mode 5, slot -999 , button (0 for left | 4 for right); 
+- packet for every slot painted on, mode is still 5, button (1 | 5); 
+- packet with mode 5, slot -999, button (2 | 6); 
 
 If any of the painting packets other than the "progress" ones are sent out of order (for example, a start, some slots, then another start; or a left-click in the middle) the painting status will be reset. 
 
+
+Set Slot (0x67) 
+----------------
+*Server to Client*
+
+
+Sent by the server when an item in a slot (in a window) is added/removed. 
+
+
+Packet ID   | Field Name | Field Type        | Example | Notes
+------------|------------|-------------------|---------|---------------------
+0x67        | Window id  | byte              | 0       | The window which is being updated. 0 for player inventory. Note that all known window types include the player inventory. This packet will only be sent for the currently opened window while the player is performing actions, even if it affects the player inventory. After the window is closed, a number of these packets are sent to update the player's inventory window (0). 
+            | Slot       | short             | 36      | The slot that should be updated  
+            | Slot data  | [slot](Slot_Data) |         | 
+Total Size: | 4 bytes + slot data
+
+Note that if window ID and slot are both -1, it means the item currently attached to the cursor. 
+
+See [inventory windows](Inventory#Windows) for further information about how slots are indexed. 
+
+Slots: [[1]](http://gyazo.com/9d52e1fd4dc14790ec66eab4a9aee00e.png) 
+
+
+Set Window Items (0x68)
+----------------
+*Server to Client*
+
+
+Sent by the server when an item in a slot (in a window) is added/removed. This includes the main inventory, equipped armour and crafting slots. 
+
+
+Packet ID   | Field Name | Field Type                | Example | Notes
+------------|------------|---------------------------|---------|---------------------
+0x68        | Window id  | byte                      | 1       | The id of window which items are being sent for. 0 for player inventory.  
+            | Count      | short                     | 4       | The number of slots (see below)  
+            | Slot data  | array of[slot](Slot_Data) |         | 
+Total Size: | 4 bytes + size of slot data array 
+
+[![The inventory slots](images/Inventory-slots-small.png)](images/Inventory-slots.png)
+
+See [inventory windows](Inventory#Windows) for further information about how slots are indexed.
+
+
+Update Window Property (0x69)
+----------------
+*Server to Client*
+
+
+Sent by the server when an item in a slot (in a window) is added/removed. This includes the main inventory, equipped armour and crafting slots. 
+
+
+Packet ID   | Field Name | Field Type | Example | Notes
+------------|------------|------------|---------|---------------------
+0x69        | Window id  | byte       | 2       | The id of the window. 
+            | Property   | short      | 1       | Which property should be updated. 
+            | Value      | short      | 650     | The new value for the property. 
+Total Size: | 6 bytes
+
+**Furnance**
+Properties:
+
+- 0: Progress arrow
+- 1: Fire icon: (fuel)
+
+Values:
+
+- 0-200 for progress arrow
+- 0-200 for fuel indicator
+
+Ranges are presumably in in-game ticks 
+
+**Enchantment Table** 
+
+Properties: 0, 1 or 2 depending on the "enchantment slot" being given. 
+
+Values: The enchantment's level. 
+
+
+Confirm Transaction (0x6A) 
+----------------
+*Two-Way*
+
+
+A packet from the server indicating whether a request from the client was accepted, or whether there was a conflict (due to lag). This packet is also sent from the client to the server in response to a server transaction rejection packet. 
+
+
+Packet ID   | Field Name    | Field Type | Example | Notes
+------------|---------------|------------|---------|---------------------
+0x6A        | Window id     | byte       | 1       | The id of the window that the action occurred in. 
+            | Action number | short      | 12      | Every action that is to be accepted has a unique number. This field corresponds to that number. 
+            | Accepted?     | boolean    | true    | Whether the action was accepted. 
+Total Size: | 5 bytes
+
+
+Creative Inventory Action (0x6B)  
+----------------
+*Two-Way*
+
+
+While the user is in the standard inventory (i.e., not a crafting bench) on a creative-mode server then the server will send this packet: 
+
+- If an item is dropped into the quick bar
+- If an item is picked up from the quick bar (item id is -1) 
+
+
+Packet ID   | Field Name   | Field Type        | Example | Notes
+------------|--------------|-------------------|---------|---------------------
+0x6B        | Slot         | short             | 36      | Inventory slot 
+            | Clicked item | [slot](Slot_Data) |         | 
+Total Size: | 3 bytes + slot data 
+
+
+Enchant Item (0x6C) 
+----------------
+*Client to Server*
+
+
+Packet ID   | Field Name  | Field Type | Example | Notes
+------------|-------------|------------|---------|---------------------
+0x6C        | Window ID   | byte       | 1       | The ID sent by [Open Window](Protocol#open-window-0x64) 
+            | Enchantment | byte       |         | The position of the enchantment on the enchantment table window, starting with 0 as the topmost one. 
+Total Size: | 3 bytes
+
+
+Update Sign (0x82) 
+----------------
+*Two-Way*
+
+
+Packet ID   | Field Name  | Field Type | Example     | Notes
+------------|-------------|------------|-------------|---------------------
+0x82        | X           | int        | 128         | Block X Coordinate 
+            | Y           | short      | 0           | Block Y Coordinate 
+            | Z           | int        | 128         | Block Z Coordinate 
+            | Text1       | string     | First line  | First line of text in the sign 
+            | Text2       | string     | Second line | Second line of text in the sign 
+            | Text3       | string     | Third line  | Third line of text in the sign 
+            | Text4       | string     | Fourth line | Fourth line of text in the sign 
+Total Size: | 11 bytes + 4 strings
+
+This message is sent from the server to the client whenever a sign is discovered or created. This message is sent from the client to the server when the "Done" button is pushed after placing a sign. This message is NOT sent when a sign is destroyed or unloaded. 
+
+
+Item Data (0x83) 
+----------------
+*Server to Client*
+
+
+Sent to specify complex data on an item; currently used only for maps. 
+
+
+Packet ID   | Field Name  | Field Type | Example                | Notes
+------------|-------------|------------|------------------------|---------------------
+0x83        | Item Type   | short      | 358                    | Block X Coordinate 
+            | Item ID     | short      | 0                      | Block Y Coordinate 
+            | Text length | short      | 35                     | Block Z Coordinate 
+            | Text        | byte array | {0,0,0,20,20,20,20,20} | First line of text in the sign 
+Total Size: | 7 bytes + Text length 
+
+**Maps** If the first byte of the text is 0, the next two bytes are X start and Y start and the rest of the bytes are the colors in that column. 
+
+If the first byte of the text is 1, the rest of the bytes are in groups of three: (data, x, y). The lower half of the data is the type (always 0 under vanilla) and the upper half is the direction. 
+
+
+Update Tile Entity (0x84)
+----------------
+*Server to Client*
+
+
+Essentially a block update on a tile entity. 
+
+
+Packet ID   | Field Name  | Field Type                               | Example     | Notes
+------------|-------------|------------------------------------------|-------------|---------------------
+0x84        | X           | int                                      | 128         | Block X Coordinate 
+            | Y           | short                                    | 0           | Block Y Coordinate 
+            | Z           | int                                      | 128         | Block Z Coordinate 
+            | Action      | byte                                     |             | The type of update to perform 
+            | Data length | short                                    |             | Varies
+            | NBT Data    | Byte Array - Present if data length > 0  |             | Compressed with gzip. Varies
+Total Size: | 12 bytes + itemstack bytes
+
+**Actions**
+ 
+- 1: Set mob displayed inside a mob spawner. Custom 1 contains the [mob type](Entities#Mobs) 
+
+
+Increment Statistic (0xC8)
+----------------
+*Server to Client*
+
+
+Packet ID   | Field Name   | Field Type | Example     | Notes
+------------|--------------|------------|-------------|---------------------
+0xC8        | Statistic ID | int        | 1003        | The ID of the statistic. See [List of statistics](http://www.minecraftforum.net/viewtopic.php?f=1020&t=295360).
+            | Amount       | byte       | 1           | The amount to increment the statistic. 
+Total Size: | 6 bytes
+
+
+Player List Item (0xC9) 
+----------------
+*Server to Client*
+
+Sent by the notchian server to update the user list (<tab> in the client). The server sends one packet per user per tick, amounting to 20 packets/s for 1 online user, 40 for 2, and so forth. 
+
+Packet ID   | Field Name  | Field Type | Example     | Notes
+------------|-------------|------------|-------------|---------------------
+0xC9        | Player name | string     | barneygale  | Supports chat colouring, limited to 16 characters. 
+            | Online      | boolean    | true        | If false, the client will remove the user from the list. 
+            | Ping        | short      | 193         | Ping, presumably in ms.
+Total Size: | 6 bytes + length of string 
+
+
+Player Abilities (0xCA) 
+----------------
+*Two-Way*
+
+The latter 2 bytes are used to indicate the walking and flying speeds respectively, while the first byte is used to determine the value of 4 booleans. 
+
+These booleans are whether damage is disabled (god mode, '8' bit), whether the player can fly ('4' bit), whether the player is flying ('2' bit), and whether the player is in creative mode ('1' bit). 
+
+To get the values of these booleans, simply AND (&) the byte with 1,2,4 and 8 respectively, to get the 0 or 1 bitwise value. To set them OR (|) them with their repspective masks. The vanilla client sends this packet when the player starts/stops flying with the second parameter changed accordingly. All other parameters are ignored by the vanilla server. 
+
+
+Packet ID   | Field Name    | Field Type | Example     | Notes
+------------|---------------|------------|-------------|---------------------
+0xCA        | Flags         | byte       | 5           | 
+            | Flying speed  | byte       | 12          | 
+            | Walking speed | byte       | 25          | 
+Total Size: | 4 bytes
+
+
+Tab-complete (0xCB)
+----------------
+*Two-Way*
+
+Sent C->S when the user presses [tab] while writing text. The payload contains all text behind the cursor. 
+
+The server responds with an auto-completion of the last word sent to it. In the case of regular chat, this is a player username. Command names and parameters are also supported. 
+
+In the event of more than one possible completion, the server responds with the options packed into the single string field, separated by a null character. Note that as strings are UTF-16, this is two bytes wide. 
+
+
+Packet ID   | Field Name    | Field Type | Example     | Notes
+------------|---------------|------------|-------------|---------------------
+0xCB        | Text          | string     | pd          |
+Total Size: | 3 bytes + length of string 
+
+
+Client Settings (0xCC)
+----------------
+*Client to Server*
+
+Sent when the player connects, or when settings are changed. 
+
+
+Packet ID   | Field Name    | Field Type | Example     | Notes
+------------|---------------|------------|-------------|---------------------
+0xCC        | Locale        | string     | en_GB       |
+            | View Distance | byte       | 0           | 0-3 for 'far', 'normal', 'short', 'tiny'.  
+            | Chat Flags    | byte       | 8           | Chat settings. See notes below.  
+            | Difficulty    | byte       | 0           | Client-side difficulty from options.txt  
+            | Show Cape     | boolean    | true        | Client-side "show cape" option 
+Total Size: | 7 bytes + length of string 
+
+
+Chat flags has several values packed into one byte. 
+
+**Chat Enabled**: Bits 0-1. 00: Enabled. 01: Commands only. 10: Hidden. 
+
+**Colors Enabled**: Bit 3. 0: Disabled. 1: Enabled. 
+
+
+Client Statuses (0xCD) 
+----------------
+*Client to Server*
+
+Sent when the client is ready to complete login and when the client is ready to respawn after death. 
+
+
+Packet ID   | Field Name    | Field Type | Example     | Notes
+------------|---------------|------------|-------------|---------------------
+0xCD        | Payload       | byte       | 0           | Bit field. 0: Initial spawn, 1: Respawn after death
+Total Size: | 2 bytes
+
+
+Scoreboard Objective (0xCE)
+----------------
+*Server to Client*
+
+This is sent to the client when it should create a new scoreboard or remove one.  
+
+
+Packet ID   | Field Name      | Field Type | Example     | Notes
+------------|-----------------|------------|-------------|---------------------
+0xCE        | Objective name  | string     | deaths      | An unique name for the objective 
+            | Objective value | string     | Deaths      | The text to be displayed for the score. 
+            | Create/Remove   | byte       | 0           | 0 to create the scoreboard. 1 to remove the scoreboard. 2 to update the display text. TODO: Check these values 
+Total Size: | 6 bytes + length of string 
+
+
+Update Score (0xCF)
+----------------
+*Server to Client*
+
+This is sent to the client when it should update a scoreboard item. 
+
+
+Packet ID   | Field Name      | Field Type | Example     | Notes
+------------|-----------------|------------|-------------|---------------------
+0xCF        | Item Name       | string     | Bob         | An unique name to be displayed in the list. 
+            | Update/Remive   | byte       | 0           | 0 to create/update an item. 1 to remove an item. 
+            | Score Name      | string     | deaths      | The unique name for the scoreboard to be updated. Only sent when Update/Remove does not equal 1. 
+            | Value           | int        | 5           | The score to be displayed next to the entry. Only sent when Update/Remove does not equal 1. 
+Total Size: | 9 bytes + length of strings  
+
+
+Display Scoreboard (0xD0) 
+----------------
+*Server to Client*
+
+This is sent to the client when it should display a scoreboard. 
+
+
+Packet ID   | Field Name      | Field Type | Example     | Notes
+------------|-----------------|------------|-------------|---------------------
+0xD0        | Position        | byte       | 1           | The position of the scoreboard. 0 = list, 1 = sidebar, 2 = belowName. 
+            | Score Name      | string     | deaths      | The unique name for the scoreboard to be displayed. 
+Total Size: | 4 bytes + length of strings  
+
+
+Teams (0xD1) 
+----------------
+*Server to Client*
+
+
+Creates and updates teams. 
+
+
+Packet ID   | Field Name        | Field Type       | Example | Notes
+------------|-------------------|------------------|---------|---------------------
+0xD1        | Team Name         | string           | mcdevs  | A unique name for the team. (Shared with scoreboard). 
+            | Mode              | byte             | 0       | See below
+            | Team Display Name | string           | McDevs  | Only if Mode = 0 or 2. 
+            | Team Prefix       | string           |         | Only if Mode = 0 or 2. Displayed before the players' name that are part of this team.  
+            | Team Suffix       | string           |         | Only if Mode = 0 or 2. Displayed after the players' name that are part of this team.  
+            | Friendly fire     | byte             | 0       | Only if Mode = 0 or 2; 0 for off, 1 for on, 3 for seeing friendly invisibles 
+            | Player count      | short            | 0       | Only if Mode = 0 or 3 or 4. Number of players in the array  
+            | Players           | Array of strings |         | Only if Mode = 0 or 3 or 4. Players to be added/remove from the team. 
+Total Size: | 4 bytes + length of strings  
+
+
+**Modes**:
+
+- 0 Team Created
+- 1 Team Removed
+- 2 Team Information Update
+- 3 Add Player
+- 4 Remove Player
+
+
+Plugin Message (0xFA) 
+----------------
+*Two-Way*
+
+
+Mods and plugins can use this to send their data. As of 1.3, Minecraft itself uses a number of [plugin channels](Plugin_channel). These internal channels are prefixed with MC|. 
+
+
+Packet ID   | Field Name        | Field Type | Example           | Notes
+------------|-------------------|------------|-------------------|---------------------
+0xFA        | Channel           | string     | MyMod:testchannel | Name of the "channel" used to send the data
+            | Length            | short      |                   | Length of the following byte array 
+            | Data              | byte array |                   | Any data. 
+Total Size: | 5 bytes + length of string + length of byte array 
+
+
+More documentation on this: [http://dinnerbone.com/blog/2012/01/13/minecraft-plugin-channels-messaging/](http://dinnerbone.com/blog/2012/01/13/minecraft-plugin-channels-messaging/ )
