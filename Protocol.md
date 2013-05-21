@@ -1509,3 +1509,73 @@ Total Size: | 5 bytes + length of string + length of byte array
 
 
 More documentation on this: [http://dinnerbone.com/blog/2012/01/13/minecraft-plugin-channels-messaging/](http://dinnerbone.com/blog/2012/01/13/minecraft-plugin-channels-messaging/ )
+
+
+Encryption Key Response (0xFC) 
+----------------
+*Two-Way*
+
+
+See [Protocol Encryption](Protocol_Encryption) for information on this packet. Bypassing the encryption is possible, authentication for the player name is still needed if the server is in online mode, but instead of sending this packet, you send [Client Statuses](Protocol#client-statuses-0xcd) instead. 
+
+Packet ID   | Field Name           | Field Type | Example | Notes
+------------|----------------------|------------|---------|--------
+0xFC        | Shared secret length | short      |         | 
+            | Shared secret        | byte array |         | 
+            | Verify token length  | short      |         | 
+            | Verify token         | byte array |         | 
+Total Size: | 5 bytes + length of shared secret + length of token
+
+
+Encryption Key Request (0xFD) 
+----------------
+*Server to Client*
+
+
+See [Protocol Encryption](Protocol_Encryption) for information on this packet. 
+
+Packet ID   | Field Name          | Field Type | Example | Notes
+------------|---------------------|------------|---------|--------
+0xFD        | Server id length    | short      |         | 
+            | Server id           | string     |         | 
+            | Public key length   | short      |         | 
+            | Public key          | byte array |         | 
+            | Verify token length | short      |         | 
+            | Verify token        | byte array |         | 
+Total Size: | 7 bytes + length of string + length of key + length of token 
+
+
+Server List Ping (0xFE)
+----------------
+*Client to Server*
+
+
+This packet is used by the multiplayer menu to retrieve MOTD, version, and player counts. For more info see [Server List Ping](Server_List_Ping) 
+
+
+Packet ID   | Field Name | Field Type | Example | Notes
+------------|------------|------------|---------|--------
+0xFE        | Magic      | byte       | 1       | always 1
+Total Size: | 2 bytes
+
+
+Disconnect/Kick (0xFF) 
+----------------
+*Two-Way*
+
+Sent by the server before it disconnects a client, or by the client before it disconnects from the server. The receiver of this packet assumes that the sender has already closed the connection by the time the packet arrives. 
+
+Due to race conditions in the client, a local server may need to pause for a short period after sending this packet before closing the connection. An alternative is simply not to close the connection, and wait for the client to do so on receipt of this packet. 
+
+
+Packet ID   | Field Name | Field Type | Example             | Notes
+------------|------------|------------|---------------------|--------
+0xFF        | Reason     | string     | The server is full! | Displayed to the client when the connection terminates
+Total Size: | 3 bytes + length of string
+
+See Also
+---------------------------------------------
+
+- [Protocol History](Protocol_History)
+- [Data Types](Data_Types)
+- [Units of Measurement](Units_of_Measurement)
