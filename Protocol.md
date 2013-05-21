@@ -1099,8 +1099,8 @@ The distinct type of click performed by the client is determined by the combinat
 
 
 
-Mode | Button | Slot | Trigger 
-
+Mode | Button | Slot     | Trigger 
+-----|--------|----------|-------------------------
 0    | 0      | N/A      | Left mouse click  
 0    | 1      | N/A      | Right mouse click  
 1    | 0      | N/A      | Shift + left mouse click  
