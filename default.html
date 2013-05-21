@@ -1,20 +1,56 @@
 <!DOCTYPE html>
 <html>
-	<head>
-    <meta charset="utf-8" />
-	<title> McDevs Wiki </title>
-	<link href="/style.css@template" rel="stylesheet"/>
+<head>
+    <title>McDevs Wiki</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css@template" rel="stylesheet" media="screen" />
 
-	</head>
-	
-	<body>
-    <header>
-        <p class="site-title"> McDevs Minecraft Wiki</p>
-        </header>
-    <div id="body">
-	<section class="content-wrapper main-content clear-fix">
-        [content]
-        </section>
+    <style type="text/css" media="screen">
+        body {
+            padding-top: 40px;
+        }
+    </style>
+
+
+</head>
+<body>
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <script src="js/bootstrap.min.js@template"></script>
+    <div class="container-fluid">
+
+        <div class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <a class="brand" href="#" style="margin-left: 2px;">McDevs</a>
+                <ul class="nav">
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">Protocol</a></li>
+                    <li><a href="#">Link1</a></li>
+                    <li><a href="#">Link2</a></li>
+                    <li><a href="#">Link3</a></li>
+                </ul>
+            </div>
         </div>
-	</body>
+
+        <div class="span3">
+            <ul class="nav nav-tabs nav-stacked">
+                [nav]
+            </ul>
+
+        </div>
+        <div class="span9">
+            <!--Body content-->
+            <a href="#top" style="display:none;"/>
+            [content]
+        </div>
+
+        <div class="navbar navbar-fixed-bottom">
+            <div class="navbar-inner">
+                <ul class="nav">
+                    <li><a href="#top">Top</a></li>
+                </ul>
+                </div>
+        </div>
+    </div>
+</body>
 </html>
