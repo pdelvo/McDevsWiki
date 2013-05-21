@@ -860,3 +860,274 @@ Chunk Z        | int            | 10      | The Z coordinate of the specific chu
 Primary bitmap | unsigned short | 15      | A bitmap which specifies which sections are not empty in this chunk  
 Add bitmap     | unsigned short | 0       | A bitmap which specifies which sections need add information because of very high block ids. not yet used. needs verification  
 Total Size:    | 12 bytes  
+
+
+Explosion (0x3C) 
+----------------
+*Server to Client*
+
+Sent when an explosion occurs (creepers, TNT, and ghast fireballs). 
+
+
+Packet ID   | Field Name      | Field Type                 | Example | Notes
+------------|-----------------|----------------------------|---------|---------------------
+0x3C        | X               | double                     |         | 
+            | Y               | double                     |         | 
+            | Z               | double                     |         | 
+            | Radius          | float                      | 3.0     | Currently unused in the client 
+            | Record Count    | int                        |         | This is the count, not the size. The size is 3 times this value.  
+            | Records         | (byte, byte, byte) × count |         |  Each record is 3 signed bytes long, each bytes are the XYZ (respectively) offsets of affected blocks.  
+            | Player Motion X | float                      |         | X velocity of the player being pushed by the explosion
+            | Player Motion X | float                      |         | Y velocity of the player being pushed by the explosion 
+            | Player Motion X | float                      |         | Z velocity of the player being pushed by the explosion
+Total Size: | 45 bytes + 3*(Record count) bytes
+
+Each block in Records is set to air. Coordinates for each axis in record is int(X) + record.x 
+
+
+Sound Or Particle Effect (0x3D) 
+----------------
+*Server to Client*
+
+Sent when a client is to play a sound or particle effect. 
+
+By default, the minecraft client adjusts the volume of sound effects based on distance. The final boolean field is used to disable this, and instead the effect is played from 2 blocks away in the correct direction. Currently this is only used for effect 1013 (mob.wither.spawn), and is ignored for any other value by the client. 
+ 
+
+
+Packet ID   | Field Name              | Field Type                 | Example | Notes
+------------|-------------------------|----------------------------|---------|---------------------
+0x3D        | Effect ID               | int                        | 1003    | The ID of the effect, see below.  
+            | X                       | int                        |         | The X location of the effect. 
+            | Y                       | byte                       |         | The Y location of the effect. 
+            | Z                       | int                        |         | The Z location of the effect. 
+            | Data                    | int                        | 0       | Extra data for certain effects, see below. 
+            | Disable relative volume | boolean                    | false   | See above 
+Total Size: | 45 bytes + 3*(Record count) bytes
+
+Each block in Records is set to air. Coordinates for each axis in record is int(X) + record.x 
+
+### Effects
+
+**Sound:**
+
+- 1000: random.click 
+- 1001: random.click 
+- 1002: random.bow 
+- 1003: random.door_open or random.door_close (50/50 chance) 
+- 1004: random.fizz 
+- 1005: Play a music disc. **Data**: [Record ID](Music_Discs)
+- (1006 not assigned) 
+- 1007: mob.ghast.charge 
+- 1008: mob.ghast.fireball 
+- (1009 not assigned) 
+- 1010: mob.zombie.wood 
+- 1011: mob.zombie.metal 
+- 1012: mob.zombie.woodbreak 
+- 1013: mob.wither.spawn 
+
+**Particle:**
+
+- 2000: Spawns 10 smoke particles, e.g. from a fire. Data: direction, see below 
+- 2001: Block break. **Data**: [Block ID](Data_values) 
+- 2002: Splash potion. Particle effect + glass break sound. **Data**: [Potion ID](http://www.lb-stuff.com/Minecraft/PotionDataValues1.9pre3.txt) 
+- 2003: Eye of ender. Actual client effect to be determined. 
+- 2004: Mob spawn particle effect: smoke + flames
+
+**Smoke directions:**
+
+ID | Direction
+---|--------------
+0  | South - East  
+1  | South  
+2  | South - West  
+3  | East  
+4  | (Up or middle ?)  
+5  | West  
+6  | North - East  
+7  | North  
+8  | North - West  
+
+
+Named Sound Effect (0x3E)
+----------------
+*Server to Client*
+
+Used to play a sound effect on the client. 
+
+All known sound effect names can be seen [here](https://github.com/SirCmpwn/Craft.Net/blob/master/Craft.Net.Data/SoundEffect.cs). 
+
+
+Packet ID   | Field Name        | Field Type                 | Example   | Notes
+------------|-------------------|----------------------------|-----------|---------------------
+0x3E        | Sound name        | string                     | step.gras | 250
+            | Effect Position X | int                        | 250       | Effect X multiplied by 8 
+            | Effect Position Y | int                        | 250       | Effect Y multiplied by 8 
+            | Effect Position Z | int                        | 250       | Effect Z multiplied by 8 
+            | Volume            | float                      | 9         | 1 is 100%, can be more 
+            | Pitch             | byte                       | 1         | 63 is 100%, can be more
+Total Size: | 20 bytes + length of string
+
+
+Particle (0x3F)
+----------------
+*Server to Client*
+
+This displays the named particle
+
+
+Packet ID   | Field Name          | Field Type                 | Example       | Notes
+------------|---------------------|----------------------------|---------------|---------------------
+0x3F        | Particle name       | string                     | hugeexplosion | The name of the particle to create. A list can be found [here](https://gist.github.com/thinkofdeath/5110835)
+            | X                   | float                      | 0             | X position of the particle  
+            | Y                   | float                      | 0             | Y position of the particle  
+            | Z                   | float                      | 0             | Z position of the particle  
+            | Offset Position X   | float                      | 0             | This is added to the X position after being multiplied by random.nextGaussian() 
+            | Offset Position X   | float                      | 0             | This is added to the Y position after being multiplied by random.nextGaussian() 
+            | Offset Position X   | float                      | 0             | This is added to the Z position after being multiplied by random.nextGaussian() 
+            | Particle speed      | float                      | 0             | The speed of each particle  
+            | Number of particles | int                        | 0             | The number of particles to create 
+Total Size: | 34 bytes + length of string  
+
+
+Change Game State (0x46) 
+----------------
+*Server to Client*
+
+This packet appeared with protocol version 10. Currently, it appears when a bed can't be used as a spawn point and when the rain state changes. it could have additional uses in the future. 
+
+The class has an array of strings linked to reason codes 0, 1, 2, and 3 but only the codes for 1 and 2 are null.
+
+
+Packet ID   | Field Name | Field Type | Example | Notes
+------------|------------|------------|---------|---------------------
+0x46        | Reason     | string     | 0       | See below
+            | Game mode  | float      | 0       | Used only when reason = 3. 0 is survival, 1 is creative. 
+Total Size: | 34 bytes + length of string  
+
+**Reason codes**
+
+
+Code | Effect           | Text 
+-----|------------------|---------------------
+0    | Invalid Bed      | "tile.bed.notValid"  
+1    | Begin raining    | null  
+2    | End raining      | null  
+3    | Change game mode | gameMode.changed  
+4    | Enter credits    |
+
+
+Spawn Global Entity (0x47)
+----------------
+*Server to Client*
+
+With this packet, the server notifies the client of thunderbolts striking within a 512 block radius around the player. The coordinates specify where exactly the thunderbolt strikes. 
+
+
+Packet ID   | Field Name          | Field Type | Example | Notes
+------------|---------------------|------------|---------|---------------------
+0x47        | Entity ID           | int        | 4       | The entity ID of the thunderbolt 
+            | Type                | byte       | 1       | The global entity type, currently always 1 for thunderbolt.
+            | X                   | int        | 133     | Thunderbolt X as Absolute Integer
+            | Y                   | int        | 913     | Thunderbolt Y as Absolute Integer
+            | Z                   | int        | 63552   | Thunderbolt Z as Absolute Integer
+Total Size: | 18 bytes
+
+
+Open Window (0x64)
+----------------
+*Server to Client*
+
+
+This is sent to the client when it should open an inventory, such as a chest, workbench, or furnace. This message is not sent anywhere for clients opening their own inventory. 
+
+
+Packet ID   | Field Name                | Field Type | Example | Notes
+------------|---------------------------|------------|---------|---------------------
+0x64        | Window id                 | byte       | 123     | A unique id number for the window to be displayed. Notchian server implementation is a counter, starting at 1. 
+            | Inventory Type            | byte       | 2       | The window type to use for display. Check below 
+            | Window title              | string     | Chest   | The title of the window.  
+            | Number of Slots           | byte       | 3       | Number of slots in the window (excluding the number of slots in the player inventory).  
+            | Use provided window title | boolean    | 1       | If false, the client will look up a string like "window.minecart". If true, the client uses what the server provides. 
+Total Size: | 7 bytes + length of string
+
+See [inventory windows](Inventory#Windows) for further information. 
+
+
+Close Window (0x65)
+----------------
+*Two-Way*
+
+
+This packet is sent by the client when closing a window. This packet is sent from the server to the client when a window is forcibly closed, such as when a chest is destroyed while it's open. 
+
+Note, notchian clients send a close window message with window id 0 to close their inventory even though there is never an Open Window message for inventory. 
+
+
+
+Packet ID   | Field Name | Field Type | Example | Notes
+------------|------------|------------|---------|---------------------
+0x65        | Window id  | byte       | 0       | This is the id of the window that was closed. 0 for inventory.
+Total Size: | 2 bytes
+
+
+Click Window (0x66) 
+----------------
+*Client to Server*
+
+
+This packet is sent by the player when it clicks on a slot in a window. 
+
+
+Packet ID   | Field Name    | Field Type        | Example | Notes
+------------|---------------|-------------------|---------|---------------------
+0x65        | Window id     | byte              | 0       | The id of the window which was clicked. 0 for player inventory. 
+            | Slot          | short             | 36      | The clicked slot. See below. 
+            | Button        | byte              | 1       | The button used in the click. See below. 
+            | Action number | short             | 12      | A unique number for the action, used for transaction handling (See the Transaction packet). 
+            | Mode          | byte              | 1       | Inventory operation mode. See below. 
+            | Clicked item  | [slot](Slot_Data) | 0       | 
+Total Size: | 8 bytes + slot data
+
+See [inventory windows](Inventory#Windows) for further information about how slots are indexed. 
+
+When right-clicking on a stack of items, half the stack will be picked up and half left in the slot. If the stack is an odd number, the half left in the slot will be smaller of the amounts. 
+
+The Action number is actually a counter, starting at 1. This number is used by the server as a transaction ID to send back a [Transaction packet](Protocol#confirm-Transaction-0x6A). 
+
+The distinct type of click performed by the client is determined by the combination of the "Mode" and "Button" fields. 
+
+
+
+Mode | Button | Slot | Trigger 
+
+0    | 0      | N/A      | Left mouse click  
+0    | 1      | N/A      | Right mouse click  
+1    | 0      | N/A      | Shift + left mouse click  
+1    | 1      | N/A      | Shift + right mouse click (Identical behavior)  
+2    | 0      | N/A      | Number key 1  
+2    | 1      | N/A      | Number key 2  
+2    | 2      | N/A      | Number key 3  
+2    | ...    | ...      | ...  
+2    |8       | N/A      | Number key 9  
+3    |2       | N/A      | Middle click  
+4    |0       | Not -999 | Drop key (Q)  
+4    |1       | Not -999 | Ctrl + Drop key (Ctrl-Q)  
+4    |0       | -999     | Left click outside inventory holding nothing (No-op)  
+4    |1       | -999     | Right click outside inventory holding nothing (No-op)  
+5    |0       | -999     | Starting left mouse paint (Or middle mouse)  
+5    |4       | -999     | Starting right mouse paint  
+5    |1       | Not -999 | Left mouse painting progress  
+5    |5       | Not -999 | Right mouse painting progress  
+5    |2       | -999     | Ending left mouse paint  
+5    |6       | -999     | Ending right mouse paint  
+6    |0       | N/A      | Double click  
+
+Starting from version 1.5, "painting mode" is available for use in inventory windows. It is done by picking up stack of something (more than 1 items), then holding mouse button (left, right or middle) and dragging holded stack over empty (or same type in case of right button ) slots. In that case client sends the following to server after mouse button release (omitting first pickup packet which is sent as usual): 
+
+1. packet with mode 5, slot -999 , button (0 for left | 4 for right); 
+2. packet for every slot painted on, mode is still 5, button (1 | 5); 
+3. packet with mode 5, slot -999, button (2 | 6); 
+
+If any of the painting packets other than the "progress" ones are sent out of order (for example, a start, some slots, then another start; or a left-click in the middle) the painting status will be reset. 
+
