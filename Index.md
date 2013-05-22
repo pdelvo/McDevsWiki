@@ -15,7 +15,7 @@ There are ongoing efforts to keep reverse engineered documentation updated, but 
 - [Rcon and Query protocol specifications](#)
 - [Authentication Scheme](#)
 - [Protocol Encryption](#)
-- [Map Format] (See also: mirror of the old [NBT](http://wiki.vg/NBT).txt)
+- [Map Format](#) (See also: mirror of the old [NBT](http://wiki.vg/NBT).txt)
 
 ### Tools & Mods
 
