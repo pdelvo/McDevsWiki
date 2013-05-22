@@ -10,6 +10,11 @@
         body {
             padding-top: 40px;
         }
+table { width:100%; }
+td { border:1px solid #000; vertical-align:top; overflow:hidden; }
+        .linenumber {
+            width: 40px;
+        }
     </style>
 
 
@@ -34,8 +39,8 @@
             <!--Body content-->
             <h1>[title]</h1>
             <hr />
-            <div style="width: 1000px; overflow:auto;">
-                <table>
+            <div style="width: 1000px; overflow:hidden;">
+                <table style="border-collapse:collapse; table-layout: fixed;" >
                     [content]
                 </table>
             </div>
