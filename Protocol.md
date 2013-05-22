@@ -145,10 +145,10 @@ Food saturation acts as a food "overcharge". Food values will not decrease while
 
 Packet ID   | Field Name      | Field Type | Example | Notes
 ------------|-----------------|------------|---------|----------------------------
-0x08        | Health          | short      | 20      | 0 or less = dead, 20 = full HP
+0x08        | Health          | float      | 20.0    | 0 or less = dead, 20 = full HP
             | Food            | short      | 20      | 0 - 20
             | Food Saturation | float      | 5.0     | Seems to vary from 0.0 to 5.0 in integer increments
-Total Size: | 9 bytes
+Total Size: | 11 bytes
 
 
 Respawn (0x09)
@@ -389,7 +389,8 @@ Packet ID   | Field Name    | Field Type | Example | Notes
 ------------|---------------|------------|---------|----------------------------
 0x13        | Entity ID     | int        | 55534   | Player ID
             | Action ID     | byte       | 1       | The ID of the action, see below.
-Total Size: | 6 bytes
+            | Unknown       | int        | 0       | Something to do with horses. Ranged from 0 -> 90 
+Total Size: | 10 bytes
 
 Action ID can be one of the following values:  
 
@@ -505,6 +506,22 @@ Total Size: | 23 bytes + length of string
 Calculating the center of an image: given a (width x height) grid of cells, with (0, 0) being the top left corner, the center is (max(0, width / 2 - 1), height / 2). E.g. 
 
 2x1 (1, 0) 4x4 (1, 2) 
+
+
+Steer Vehicle (0x1B) 
+----------------
+*Client to Server*
+
+Sent by client to steer the horse, minecart and boats. Horses listen to all directions, boats and minecarts only listen to the positive forward value in combination with the direction the player is looking in. 
+
+
+Packet ID   | Field Name    | Field Type | Example | Notes
+------------|---------------|------------|---------|----------------------------
+0x1B        | Sideways      | float      | 0.98    | Positive to the left of the player
+            | Forward       | float      | -0.98   | Positive forward
+            | Jump          | bool       | true    | Velocity on the Y axis 
+            | Unmount       | bool       | false   | True when leaving the vehicle
+Total Size: | 11 bytes
 
 
 Entity Velocity (0x1C) 
@@ -677,7 +694,8 @@ Packet ID   | Field Name    | Field Type   | Example       | Notes
 ------------|---------------|--------------|---------------|----------------------------
 0x27        | Entity ID     | int          | 1298          | The player entity ID being attached
             | Vehicle ID    | int          | 1805          | The vehicle entity ID attached to (-1 for unattaching)
-Total Size: | 9 bytes
+            | Leash         | boolean      | false         | If set to true, leashes the entity to the vehicle 
+Total Size: | 10 bytes
 
 
 Entity Metadata (0x28) 
@@ -1358,9 +1376,9 @@ To get the values of these booleans, simply AND (&) the byte with 1,2,4 and 8 re
 Packet ID   | Field Name    | Field Type | Example     | Notes
 ------------|---------------|------------|-------------|---------------------
 0xCA        | Flags         | byte       | 5           | 
-            | Flying speed  | byte       | 12          | 
-            | Walking speed | byte       | 25          | 
-Total Size: | 4 bytes
+            | Flying speed  | float      | 0.05        | previous integer value divided by 250 
+            | Walking speed | float      | 0.1         | previous integer value divided by 250 
+Total Size: | 10 bytes
 
 
 Tab-complete (0xCB)
